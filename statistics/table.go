@@ -670,14 +670,14 @@ func isSingleColIdxNullRange(idx *Index, ran *ranger.Range) bool {
 // and has the same distribution with analyzed rows, which means each unique value should have the
 // same number of rows(Tot/NDV) of it.
 func outOfRangeEQSelectivity(ndv, realtimeRowCount, columnRowCount int64) float64 {
-	increaseRowCount := realtimeRowCount - columnRowCount
-	if increaseRowCount <= 0 {
-		return 0 // it must be 0 since the histogram contains the whole data
-	}
 	if ndv < outOfRangeBetweenRate {
 		ndv = outOfRangeBetweenRate // avoid inaccurate selectivity caused by small NDV
 	}
 	selectivity := 1 / float64(ndv)
+	increaseRowCount := realtimeRowCount - columnRowCount
+	if increaseRowCount <= 0 {
+		return selectivity // it just need to return the selectivity that was used before
+	}
 	if selectivity*float64(columnRowCount) > float64(increaseRowCount) {
 		selectivity = float64(increaseRowCount) / float64(columnRowCount)
 	}
